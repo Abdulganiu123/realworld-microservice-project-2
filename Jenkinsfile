@@ -17,25 +17,25 @@ pipeline {
         // Checkout To The Service Branch
         stage('Checkout To Mcroservice Branch'){
             steps{
-                git branch: 'app-ad-serverice', url: 'https://github.com/awanmbandi/realworld-microservice-project.git'
+                git branch: 'app-ad-serverice', url: 'https://github.com/Abdulganiu123/realworld-microservice-project.git'
             }
         }
-        // // SonarQube SAST Code Analysis
-        // stage('SonarQube Inspection') {
-        //     steps {
-        //         sh 'gradle sonarqube'
-        //     }
-        // }
-        // stage("SonarQube SAST Analysis"){
-        //     steps{
-        //         withSonarQubeEnv('Sonar-Server') {
-        //             sh ''' 
-        //             $SCANNER_HOME/bin/sonar-scanner \
-        //             -Dsonar.projectName=app-ad-serverice \
-        //             -Dsonar.projectKey=app-ad-serverice '''
-        //         }
-        //     }
-        // }
+        // SonarQube SAST Code Analysis
+        stage('SonarQube Inspection') {
+            steps {
+                sh 'gradle sonarqube'
+            }
+        }
+        stage("SonarQube SAST Analysis"){
+            steps{
+                withSonarQubeEnv('Sonar-Server') {
+                    sh ''' 
+                    $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectName=app-ad-serverice \
+                    -Dsonar.projectKey=app-ad-serverice '''
+                }
+            }
+        }
         // Providing Snyk Access
         stage('Authenticate & Authorize Snyk') {
             steps {
@@ -55,7 +55,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'DockerHub-Credential', toolName: 'docker') {
-                        sh "docker build -t awanmbandi/adservice:latest ."
+                        sh "docker build -t abdulganiu123/adservice:latest ."
                     }
                 }
             }
@@ -63,7 +63,7 @@ pipeline {
         // Execute SCA/Dependency Test on Service Docker Image
         stage('Snyk SCA Test | Dependencies') {
             steps {
-                sh "${SNYK_HOME}/snyk-linux test --docker awanmbandi/adservice:latest || true" 
+                sh "${SNYK_HOME}/snyk-linux test --docker abdulganiu123/adservice:latest || true" 
             }
         }
         // Push Service Image to DockerHub
@@ -71,46 +71,46 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'DockerHub-Credential', toolName: 'docker') {
-                        sh "docker push awanmbandi/adservice:latest "
+                        sh "docker push abdulganiu123/adservice:latest "
                     }
                 }
             }
         }
-        // // Deploy to The Staging/Test Environment
-        // stage('Deploy Microservice To The Stage/Test Env'){
-        //     steps{
-        //         script{
-        //             withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'Kubernetes-Credential', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-        //                sh 'kubectl apply -f deploy-envs/test-env/test-namespace.yaml'
-        //                sh 'kubectl apply -f deploy-envs/test-env/deployment.yaml'
-        //                sh 'kubectl apply -f deploy-envs/test-env/service.yaml'  //ClusterIP Service
-        //            }
-        //         }
-        //     }
-        // }
-        // // Production Deployment Approval
-        // stage('Approve Prod Deployment') {
-        //     steps {
-        //             input('Do you want to proceed?')
-        //     }
-        // }
-        // // // Deploy to The Production Environment
-        // stage('Deploy Microservice To The Prod Env'){
-        //     steps{
-        //         script{
-        //             withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'Kubernetes-Credential', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-        //                sh 'kubectl apply -f deploy-envs/prod-env/prod-namespace.yaml'
-        //                sh 'kubectl apply -f deploy-envs/prod-env/deployment.yaml'
-        //                sh 'kubectl apply -f deploy-envs/prod-env/service.yaml'  //ClusterIP Service
-        //             }
-        //         }
-        //     }
-        // }
+        // Deploy to The Staging/Test Environment
+        stage('Deploy Microservice To The Stage/Test Env'){
+            steps{
+                script{
+                    withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'Kubernetes-Credential', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+                       sh 'kubectl apply -f deploy-envs/test-env/test-namespace.yaml'
+                       sh 'kubectl apply -f deploy-envs/test-env/deployment.yaml'
+                       sh 'kubectl apply -f deploy-envs/test-env/service.yaml'  //ClusterIP Service
+                   }
+                }
+            }
+        }
+        // Production Deployment Approval
+        stage('Approve Prod Deployment') {
+            steps {
+                    input('Do you want to proceed?')
+            }
+        }
+        // // Deploy to The Production Environment
+        stage('Deploy Microservice To The Prod Env'){
+            steps{
+                script{
+                    withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'Kubernetes-Credential', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+                       sh 'kubectl apply -f deploy-envs/prod-env/prod-namespace.yaml'
+                       sh 'kubectl apply -f deploy-envs/prod-env/deployment.yaml'
+                       sh 'kubectl apply -f deploy-envs/prod-env/service.yaml'  //ClusterIP Service
+                    }
+                }
+            }
+        }
     }
     post {
     always {
         echo 'Slack Notifications.'
-        slackSend channel: '#ma-multi-microservices-alerts', //update and provide your channel name
+        slackSend channel: '#aga-multi-microservices-alert', //update and provide your channel name
         color: COLOR_MAP[currentBuild.currentResult],
         message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
     }
